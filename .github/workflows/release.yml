@@ -54,12 +54,25 @@ jobs:
           echo "=== Checking TAURI_SIGNING_PRIVATE_KEY ==="
           echo "Key length: ${#TAURI_SIGNING_PRIVATE_KEY}"
           echo "Key set: $([[ -n "$TAURI_SIGNING_PRIVATE_KEY" ]] && echo 'YES' || echo 'NO')"
-          echo "First 20 chars: ${TAURI_SIGNING_PRIVATE_KEY:0:20}..."
-          echo "Last 20 chars: ...${TAURI_SIGNING_PRIVATE_KEY: -20}"
-          echo "Contains newline: $(echo "$TAURI_SIGNING_PRIVATE_KEY" | grep -c $'\n' || echo '0')"
-          echo "=== Decoding test ==="
-          echo "$TAURI_SIGNING_PRIVATE_KEY" | base64 -d 2>&1 | head -c 100 || echo "Decode failed"
-          echo ""
+          echo "First 30 chars: ${TAURI_SIGNING_PRIVATE_KEY:0:30}"
+          echo "Last 30 chars: ${TAURI_SIGNING_PRIVATE_KEY: -30}"
+          
+          # Check for leading/trailing whitespace
+          TRIMMED=$(echo "$TAURI_SIGNING_PRIVATE_KEY" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          echo "Trimmed length: ${#TRIMMED}"
+          
+          # Check if starts with expected prefix
+          if [[ "$TAURI_SIGNING_PRIVATE_KEY" == dW50cnVzdGVkI* ]]; then
+            echo "Starts with correct prefix: YES"
+          else
+            echo "Starts with correct prefix: NO"
+            echo "Expected to start with: dW50cnVzdGVkI"
+          fi
+          
+          # Try base64 decode
+          echo "=== Base64 decode test ==="
+          DECODED=$(echo "$TAURI_SIGNING_PRIVATE_KEY" | base64 -d 2>&1) || true
+          echo "Decoded first line: $(echo "$DECODED" | head -1)"
           echo "=== Done ==="
 
       - name: Build the app
